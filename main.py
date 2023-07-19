@@ -1,20 +1,13 @@
 import os
-import discord
 from dotenv import load_dotenv
 import time
+from datetime import date, datetime, timedelta
 import asyncio
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import discord
+from discord.ext import commands, tasks
 from parse_message import parse_message
 
-from discord.ext import commands, tasks
-
-"""
-TODO - so it looks like using Schedule with Discord wont work: 
-https://stackoverflow.com/questions/64167141/how-do-i-schedule-a-function-to-run-everyday-at-a-specific-time-in-discord-py
-But, the Python Discord bot has Tasks (which are supposed to be used with "Cogs", which idk what those are
-https://discordpy.readthedocs.io/en/latest/ext/tasks/
-So 1) need to learn about how to use Tasks, but before that, 0.5) I need to get a better understanding of asyncronous processing
-This could be a good start: https://realpython.com/async-io-python
-"""
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -23,9 +16,12 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+sched = AsyncIOScheduler()
+
 
 async def setup():
     print('Setting up...')
+    sched.start()
     # Connect to DB and get any tasks that haven't elapsed yet
     # then when the bot is ready, co-currently schedule all the open tasks with asyncio.gather:
     #   https://docs.python.org/3/library/asyncio-task.html#running-tasks-concurrently
@@ -62,18 +58,23 @@ async def on_message(message):
             msg = await message.channel.send(f"Reminder {parsed_reminder.task} set at {time.strftime('%X (%d/%m/%y)')}")
             print(msg)
             print(parsed_reminder.time_type)
-            # define_seconds will return the value of when
-            seconds = parsed_reminder.time_type * parsed_reminder.numeral
-            asyncio.create_task(task(seconds, parsed_reminder, message))
+            scheduled_time = get_task_run_date(parsed_reminder.time_type, parsed_reminder.numeral)
+            sched.add_job(task, 'date', run_date=scheduled_time,
+                          args=[parsed_reminder, message])
     else:
         return
 
 
-async def task(seconds, item, message):
-    await asyncio.sleep(seconds)
+def get_task_run_date(time_type, numeral):
+    current_datetime = datetime.now()
+    future_datetime = current_datetime + timedelta(seconds=time_type * numeral)
+    formatted_datetime = future_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    return formatted_datetime
+
+
+async def task(item, message):
     print(item.task, time.strftime('%X (%d/%m/%y)'))
     await message.channel.send(f"{item.task}, {time.strftime('%X (%d/%m/%y)')}", reference=message)
-
 
 
 asyncio.run(main())
