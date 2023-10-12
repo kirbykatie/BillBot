@@ -3,6 +3,8 @@ from time_constants import TIME_CONSTANTS
 
 remind_me_regex = "^(R|r)emind (me|@[\w]+) in "
 numeral_regex = "^\d+"
+
+
 class Task:
     def __init__(self, numeral, time_type, task):
         self.numeral = numeral
