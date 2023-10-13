@@ -77,7 +77,7 @@ async def on_message(message):
 
 
 def get_task_run_date(time_type, numeral):
-    current_datetime = datetime.now()
+    current_datetime = arrow.utcnow().to('US/Central')
     future_datetime = current_datetime + timedelta(seconds=time_type * numeral)
     formatted_datetime = future_datetime.strftime("%Y-%m-%d %H:%M:%S")
     return formatted_datetime
