@@ -61,7 +61,7 @@ async def on_message(message):
             scheduled_time = get_task_run_date(parsed_reminder.time_type, parsed_reminder.numeral)
             message_ref = message.to_reference()
             try:
-                current_time = arrow.utcnow().to('US/central');
+                current_time = arrow.utcnow().to('US/central')
                 sched.add_job(task, 'date', id=scheduled_time, run_date=scheduled_time, args=[parsed_reminder,
                                                                                               message_ref.message_id,
                                                                                               message_ref.channel_id,
