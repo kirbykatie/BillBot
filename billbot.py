@@ -61,7 +61,7 @@ async def on_message(message):
             scheduled_time = get_task_run_date(parsed_reminder.time_type, parsed_reminder.numeral)
             message_ref = message.to_reference()
             try:
-                current_time = arrow.utcnow().to('US/central')
+                current_time = arrow.utcnow().to('US/Central')
                 sched.add_job(task, 'date', id=scheduled_time, run_date=scheduled_time, args=[parsed_reminder,
                                                                                               message_ref.message_id,
                                                                                               message_ref.channel_id,
@@ -86,7 +86,7 @@ def get_task_run_date(time_type, numeral):
 def get_confirmation_response(user_task, author, reminder_time):
     random_res = reminderAcknowledgement[math.floor(random() * len(reminderAcknowledgement))]
     random_res = random_res.replace("<$user$>", author)
-    humanized_reminder_time = arrow.get(reminder_time, tzinfo='US/central')
+    humanized_reminder_time = arrow.get(reminder_time, tzinfo='US/Central')
     # humanized_reminder_time.to('-5:00')
     print(humanized_reminder_time.humanize())
     return f"{random_res} ({humanized_reminder_time.humanize()})"
