@@ -1,7 +1,6 @@
-
 reminderAcknowledgement = [
     "forever and always, <$user$>",
-    "grumbles yeah yeah fine <$user$> can do.",
+    "_grumbles_ yeah yeah fine <$user$> can do.",
     "sure thing, champ",
     "sure thing, chief",
     "Sure thing, <$user$>",
@@ -13,6 +12,7 @@ reminderAcknowledgement = [
     "hahahaha what? are you serious? I'm a bot not an alarm clock but okaaaaaay",
     "YOU BETCHA",
     "😏",
+    "k",
     "ehhhhhhhh ok",
     "Goddammit, fine, <$user$>",
     "I'd rather boot myself on an unprotected windows XP install than deal with you but we can't all have what we want, can we?",
@@ -48,5 +48,10 @@ reminderAcknowledgement = [
     "sssshshsssfhsfs",
     "really <$user$>? that's what you need a reminder for? okaaaay",
     "my vcr is blinking 12:00 right now so if the reminder is delayed then....whoops",
-    ""
+    "...ok. but you owe me. big time.",
+    "mmmmmmmmmmm I'll think about it",
+    "you're in luck, I have one spare egg timer available. I think it's broken but we'll give it try.",
+    "don't you have like a cell phone or something kirbykatie? it can do the same goddamn thing and then I can be lazy. but okay, I'm on it.",
+    "yarp",
+    "ooo not sure if I can count that high but I'll give it my best shot!!!",
 ]

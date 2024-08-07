@@ -1,18 +1,18 @@
+import asyncio
 import math
 import os
+from datetime import timedelta
 from random import random
 
-from dotenv import load_dotenv
-import time
-from datetime import date, datetime, timedelta
-import asyncio
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
-import discord
-from discord.ext import commands, tasks
 import arrow
-from parse_message import parse_message
+import discord
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from discord.ext import commands
+from dotenv import load_dotenv
+
 from bill_responses import reminderAcknowledgement
+from parse_message import parse_message
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -58,16 +58,21 @@ async def on_message(message):
         parsed_reminder = parse_message(message.content)
         if parsed_reminder is not None:
             print("Received reminder")
-            scheduled_time = get_task_run_date(parsed_reminder.time_type, parsed_reminder.numeral)
+            created_at = arrow.get(message.created_at)
+            # TODO - add logic to set timezone based on user
+            scheduled_time = get_task_run_date(parsed_reminder.time_type, parsed_reminder.numeral, created_at).to(
+                'US/Central')
+            scheduled_time_str = scheduled_time.format('YYYY-MM-DD HH:mm:ss')
             message_ref = message.to_reference()
+
             try:
-                current_time = arrow.utcnow().to('US/Central')
-                sched.add_job(task, 'date', id=scheduled_time, run_date=scheduled_time, args=[parsed_reminder,
-                                                                                              message_ref.message_id,
-                                                                                              message_ref.channel_id,
-                                                                                              message_ref.guild_id,
-                                                                                              current_time])
-                confirmation_response = get_confirmation_response(parsed_reminder.task, message.author.name, scheduled_time)
+                sched.add_job(task, 'date', id=scheduled_time_str, run_date=scheduled_time_str,
+                              args=[parsed_reminder,
+                                    message_ref.message_id,
+                                    message_ref.channel_id,
+                                    message_ref.guild_id,
+                                    created_at.to('US/Central')])
+                confirmation_response = get_confirmation_response(message.author.name, scheduled_time)
                 await message.channel.send(confirmation_response)
                 print("Reminder made")
             except Exception as e:
@@ -76,27 +81,23 @@ async def on_message(message):
         return
 
 
-def get_task_run_date(time_type, numeral):
-    current_datetime = arrow.utcnow().to('US/Central')
-    future_datetime = current_datetime + timedelta(seconds=time_type * numeral)
-    formatted_datetime = future_datetime.strftime("%Y-%m-%d %H:%M:%S")
-    return formatted_datetime
+def get_task_run_date(time_type, numeral, created_at):
+    future_datetime = created_at + timedelta(seconds=time_type * numeral)
+    future_datetime = arrow.get(future_datetime)
+    return future_datetime
 
 
-def get_confirmation_response(user_task, author, reminder_time):
+def get_confirmation_response(author, reminder_time):
     random_res = reminderAcknowledgement[math.floor(random() * len(reminderAcknowledgement))]
     random_res = random_res.replace("<$user$>", author)
-    humanized_reminder_time = arrow.get(reminder_time, tzinfo='US/Central')
-    # humanized_reminder_time.to('-5:00')
-    print(humanized_reminder_time.humanize())
-    return f"{random_res} ({humanized_reminder_time.humanize()})"
+    return f"{random_res} ({reminder_time.humanize(only_distance=True)} | <t:{reminder_time.format('X')[:10]}:f>)"
 
 
 async def task(item, message_id, channel_id, guild_id, original_time):
-    print(item.task, time.strftime('%X (%d/%m/%y)'))
     message_ref = discord.MessageReference(message_id=message_id, channel_id=channel_id, guild_id=guild_id)
     channel = bot.get_channel(channel_id)
-    await channel.send(f"{item.task} (Reminder set on {original_time.format('MM/DD/YY hh:mm a')})", reference=message_ref)
+    await channel.send(f"{item.task} (<t:{original_time.format('X')[:10]}:R>)",
+                       reference=message_ref)
 
 
 # Create an event loop and run the bot within it
