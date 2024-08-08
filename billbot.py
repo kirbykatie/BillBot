@@ -24,7 +24,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 jobstores = {
     "default": SQLAlchemyJobStore(url="sqlite:///jobs.sqlite", tablename="tasks")
 }
-sched = AsyncIOScheduler(jobstores=jobstores)
+sched = AsyncIOScheduler({'apscheduler.timezone': 'US/Central'}, jobstores=jobstores)
 
 
 async def setup():
