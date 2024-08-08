@@ -113,7 +113,7 @@ async def task(item, message_id, channel_id, guild_id, original_time):
     )
     channel = bot.get_channel(channel_id)
     await channel.send(
-        f"{item.task} (<t:{original_time.format('X')[:10]}:R>)", reference=message_ref
+        f"{item.task} ({original_time.humanize()})", reference=message_ref
     )
 
 
